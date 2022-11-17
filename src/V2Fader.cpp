@@ -130,7 +130,7 @@ void V2Fader::setSpeed(float duty) {
 
 // Motor resistance ~17.5Ω, 12V → 0.68A
 void V2Fader::measureCurrent() {
-  const float fraction = (float)analogRead(_pin.motor.current) / 1024.f;
+  const float fraction = handleMeasureCurrent();
 
   // Low-pass filter, smooth the value.
   const float alpha = 0.3;

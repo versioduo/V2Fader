@@ -6,6 +6,8 @@
 #include <V2Base.h>
 #include <V2Potentiometer.h>
 
+// The ADC of pinWiper is initialized and exclusively controlled by the
+// fader, it cannot be shared with other pins.
 class V2Fader : public V2Potentiometer {
 public:
   V2Fader(uint8_t pinWiper,
@@ -13,7 +15,6 @@ public:
           uint8_t pinMotorEnable,
           uint8_t pinMotorPhase,
           uint8_t pinMotorSleep,
-          uint8_t pinMotorCurrent,
           V2Base::Timer::PWM *pwm) :
     V2Potentiometer(&_config),
     _pin{.wiper{pinWiper},
@@ -22,7 +23,6 @@ public:
            .enable{pinMotorEnable},
            .phase{pinMotorPhase},
            .sleep{pinMotorSleep},
-           .current{pinMotorCurrent},
          }},
     _pwm{pwm} {}
 
@@ -44,6 +44,9 @@ public:
   // the motor speed to drive toward the target position.
   void tick();
 
+protected:
+  virtual float handleMeasureCurrent() = 0;
+
 private:
   const V2Potentiometer::Config _config{
     .n_steps{128},
@@ -60,9 +63,9 @@ private:
       uint8_t enable;
       uint8_t phase;
       uint8_t sleep;
-      uint8_t current;
     } motor;
   } _pin;
+  V2Base::Analog::ADC *_adc;
   V2Base::Timer::PWM *_pwm;
 
   volatile enum class State { Idle, Move, Stop } _state{};
@@ -85,8 +88,6 @@ private:
       float ampere;
     } current;
   } _move{};
-
-  V2Base::Analog::ADC *_adc{};
 
   void setSpeed(float duty);
   void measureCurrent();
